@@ -1,0 +1,72 @@
+name: Branch protection check
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+      administration: read
+
+    steps:
+      - name: Inspect branch protection
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const branch = 'main';
+            try {
+              const protectionResponse = await github.rest.repos.getBranchProtection({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                branch,
+              });
+
+              const repoResponse = await github.rest.repos.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+              });
+
+              const protection = protectionResponse.data;
+              const repoSettings = repoResponse.data;
+
+              const requirePullRequest = protection.required_pull_request_reviews !== null;
+              const requireLinearHistory = protection.required_linear_history?.enabled ?? false;
+              const allowDeletion = protection.allow_deletions?.enabled ?? false;
+              const mergeMethods = {
+                merge: repoSettings.allow_merge_commit ?? false,
+                squash: repoSettings.allow_squash_merge ?? false,
+                rebase: repoSettings.allow_rebase_merge ?? false,
+              };
+              const mergeAllowed = Object.values(mergeMethods).some(Boolean);
+
+              core.info(`Require PR before merging: ${requirePullRequest}`);
+              core.info(`Require linear history: ${requireLinearHistory}`);
+              core.info(`Allow deletion of main: ${allowDeletion}`);
+              core.info(`Merge methods allowed: ${JSON.stringify(mergeMethods)}`);
+
+              const errors = [];
+              if (!requirePullRequest) {
+                errors.push('Enable "Require a pull request before merging" for branch main.');
+              }
+              if (!requireLinearHistory) {
+                errors.push('Enable "Require linear history" for branch main.');
+              }
+              if (allowDeletion) {
+                errors.push('Disable deletion of branch main.');
+              }
+              if (!mergeAllowed) {
+                errors.push('Enable at least one merge strategy (merge, squash, or rebase).');
+              }
+
+              if (errors.length > 0) {
+                core.setFailed(errors.join('\n'));
+              }
+            } catch (error) {
+              core.error(`Failed to evaluate protection rules: ${error.message}`);
+              core.setFailed('Unable to verify branch protection for main.');
+            }
