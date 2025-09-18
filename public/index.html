@@ -5,10 +5,67 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Snailendar — Safe Dial</title>
   <meta name="description" content="Золотой циферблат-сейф с сезонными секторами и проектами-змейками." />
-  <link rel="stylesheet" href="./styles.css" />
+  <style>
+    :root{--gold:#caa243;--gold-deep:#9b7a2b;--metal:#202224;--metal-mid:#2a2c2f;--safe-center:#8d8f92;
+      --winter:#103e8a;--spring:#137a40;--summer:#d4af37;--autumn:#8a4f1a;--ruby:#b1202b;--silver:#cfd3d7;--gold-bright:#f1cc52;--tick:#000}
+    html,body{height:100%;margin:0;background:transparent;color:#111;-webkit-font-smoothing:antialiased;
+      font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial}
+    .wrap{height:85vh;max-height:100svh;display:grid;place-items:center;overflow:hidden}
+    svg{width:min(95vw,95vh);height:auto;display:block}
+    .bg-plate{fill:url(#plateGrad)} .ring-gold{fill:url(#goldRingGrad);stroke:var(--gold-deep);stroke-width:2}
+    .month-tick{stroke:var(--tick);stroke-width:3;stroke-linecap:round}
+    .week-tick{stroke:var(--tick);stroke-width:1.5;opacity:.9;stroke-linecap:round}
+    .month-label{fill:#111;font-weight:700;font-size:20px;letter-spacing:.5px;text-anchor:middle;dominant-baseline:middle}
+    .season-band{fill-opacity:.9;stroke:var(--gold);stroke-width:2}
+    .track{fill:none;stroke:#444;stroke-width:18;opacity:.6}
+    .snake{fill:none;stroke-linecap:round;stroke-width:18;filter:url(#bevel)}
+    .snake.ruby{stroke:var(--ruby)} .snake.silver{stroke:var(--silver)} .snake.gold{stroke:var(--gold-bright)}
+    .knob{fill:url(#knobGrad);stroke:var(--gold);stroke-width:4;cursor:grab} .knob:active{cursor:grabbing}
+    .hint{position:absolute;inset:auto 0 1rem 0;text-align:center;font-size:14px;opacity:.8;color:#333;user-select:none}
+  </style>
 </head>
 <body>
-  <div id="app"><noscript>Для отображения виджета включите JavaScript.</noscript></div>
-  <script src="./app.js" defer></script>
+  <div class="wrap">
+    <svg viewBox="-500 -500 1000 1000" role="img" aria-label="Календарь-сейф">
+      <defs>
+        <radialGradient id="plateGrad" cx="0" cy="0" r="1"><stop offset="0" stop-color="var(--metal-mid)"/><stop offset=".6" stop-color="var(--metal)"/><stop offset="1" stop-color="#111"/></radialGradient>
+        <radialGradient id="goldRingGrad" cx="0" cy="0" r="1"><stop offset="0" stop-color="#f6d47a"/><stop offset=".5" stop-color="var(--gold)"/><stop offset="1" stop-color="#7e611f"/></radialGradient>
+        <radialGradient id="knobGrad" cx="-0.1" cy="-0.1" r="1"><stop offset="0" stop-color="#bdbfc2"/><stop offset=".6" stop-color="var(--safe-center)"/><stop offset="1" stop-color="#6e7074"/></radialGradient>
+        <filter id="bevel" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur in="SourceAlpha" stdDeviation="2" result="b"/>
+          <feSpecularLighting in="b" surfaceScale="4" specularConstant=".6" specularExponent="20" lighting-color="#ffffff" result="s"><fePointLight x="-200" y="-200" z="200"/></feSpecularLighting>
+          <feComposite in="s" in2="SourceAlpha" operator="in" result="spec"/><feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="spec"/></feMerge>
+        </filter>
+      </defs>
+      <circle class="bg-plate" r="480"/><circle class="ring-gold" r="460"/>
+      <g id="seasons"><path class="season-band" fill="var(--winter)" d="" id="season-w"/><path class="season-band" fill="var(--spring)" d="" id="season-sp"/><path class="season-band" fill="var(--summer)" d="" id="season-su"/><path class="season-band" fill="var(--autumn)" d="" id="season-au"/></g>
+      <g id="dial"></g><circle class="track" r="250"/>
+      <g id="rotor"><g id="snakes"></g><circle class="knob" r="110"/><circle class="knob" r="60" fill="none" stroke="var(--gold-deep)" stroke-width="5"/></g>
+    </svg>
+    <div class="hint">Потяни за ручку или змейку — поворот по неделям с тихим «щелчком»</div>
+  </div>
+  <script>
+    const weeks=52, stepDeg=360/weeks, toRad=d=>d*Math.PI/180, svg=document.querySelector('svg'), dial=document.getElementById('dial'), snakesG=document.getElementById('snakes');
+    const arc=(r,a0,a1)=>{const p=d=>[r*Math.cos(toRad(d-90)),r*Math.sin(toRad(d-90))]; const [x0,y0]=p(a0),[x1,y1]=p(a1); const large=((a1-a0)%360)>180?1:0; return `M ${x0} ${y0} A ${r} ${r} 0 ${large} 1 ${x1} ${y1}`};
+    const months=['ЯНВАРЬ','ФЕВРАЛЬ','МАРТ','АПРЕЛЬ','МАЙ','ИЮНЬ','ИЮЛЬ','АВГУСТ','СЕНТЯБРЬ','ОКТЯБРЬ','НОЯБРЬ','ДЕКАБРЬ'], mAng=360/12;
+    for(let i=0;i<12;i++){const a=i*mAng, rOut=460, rIn=430, x1=rIn*Math.cos(toRad(a-90)),y1=rIn*Math.sin(toRad(a-90)),x2=rOut*Math.cos(toRad(a-90)),y2=rOut*Math.sin(toRad(a-90));
+      const L=document.createElementNS('http://www.w3.org/2000/svg','line'); L.setAttribute('x1',x1);L.setAttribute('y1',y1);L.setAttribute('x2',x2);L.setAttribute('y2',y2);L.setAttribute('class','month-tick'); dial.appendChild(L)}
+    for(let i=0;i<weeks;i++){const a=i*stepDeg, rOut=458, rIn=446, x1=rIn*Math.cos(toRad(a-90)),y1=rIn*Math.sin(toRad(a-90)),x2=rOut*Math.cos(toRad(a-90)),y2=rOut*Math.sin(toRad(a-90));
+      const L=document.createElementNS('http://www.w3.org/2000/svg','line'); L.setAttribute('x1',x1);L.setAttribute('y1',y1);L.setAttribute('x2',x2);L.setAttribute('y2',y2);L.setAttribute('class','week-tick'); dial.appendChild(L)}
+    for(let i=0;i<12;i++){const a=i*mAng+mAng/2, r=410, x=r*Math.cos(toRad(a-90)), y=r*Math.sin(toRad(a-90));
+      const T=document.createElementNS('http://www.w3.org/2000/svg','text'); T.setAttribute('x',x);T.setAttribute('y',y);T.setAttribute('class','month-label');T.setAttribute('transform',`rotate(${a-90} ${x} ${y})`);T.textContent=months[i]; dial.appendChild(T)}
+    [{id:'season-w',start:300,span:90},{id:'season-sp',start:30,span:90},{id:'season-su',start:120,span:90},{id:'season-au',start:210,span:90}]
+      .forEach(s=>{const p=document.getElementById(s.id), ro=310, ri=280, a0=s.start, a1=s.start+s.span; p.setAttribute('d', `${arc(ro,a0,a1)} ${arc(ri,a1,a0).replace('M','L')} Z`)});
+    const S=[{cls:'ruby',start:49,len:2},{cls:'ruby',start:25,len:2},{cls:'silver',start:3,len:6},{cls:'silver',start:16,len:6},{cls:'silver',start:29,len:6},{cls:'silver',start:42,len:6},{cls:'gold',start:30,len:4},{cls:'gold',start:0,len:3}], rSnake=250;
+    S.forEach(s=>{const a0=s.start*stepDeg,a1=(s.start+s.len)*stepDeg; const P=document.createElementNS('http://www.w3.org/2000/svg','path'); P.setAttribute('d',arc(rSnake,a0,a1)); P.setAttribute('class',`snake ${s.cls}`); snakesG.appendChild(P)});
+    const rotor=document.getElementById('rotor'); let rot=0,drag=false,start=0,base=0,last=Math.round(rot/stepDeg); let audio=null;
+    const ang=evt=>{const pt=svg.createSVGPoint(),e=evt.touches?evt.touches[0]:evt; pt.x=e.clientX;pt.y=e.clientY; const c=pt.matrixTransform(svg.getScreenCTM().inverse()); return Math.atan2(c.y,c.x)*180/Math.PI+90};
+    const tick=()=>{try{if(!audio) audio=new (window.AudioContext||window.webkitAudioContext)(); const o=audio.createOscillator(), g=audio.createGain(); o.type='square'; o.frequency.value=1000; g.gain.value=0.01; o.connect(g).connect(audio.destination); o.start(); setTimeout(()=>o.stop(),22);}catch{}};
+    const begin=e=>{drag=true; start=ang(e); base=rot; last=Math.round(rot/stepDeg); e.preventDefault()};
+    const move=e=>{if(!drag)return; rot=base+(ang(e)-start); rotor.setAttribute('transform',`rotate(${rot})`); const idx=Math.round(rot/stepDeg); if(idx!==last){last=idx;tick()} e.preventDefault()};
+    const end=()=>{if(!drag)return; drag=false; rot=Math.round(rot/stepDeg)*stepDeg; rotor.setAttribute('transform',`rotate(${rot})`); tick()};
+    document.querySelectorAll('.knob, .snake').forEach(el=>{el.addEventListener('pointerdown',begin,{passive:false});el.addEventListener('touchstart',begin,{passive:false})});
+    addEventListener('pointermove',move,{passive:false}); addEventListener('touchmove',move,{passive:false}); addEventListener('pointerup',end); addEventListener('touchend',end);
+    document.addEventListener('touchmove',e=>{if(drag)e.preventDefault()},{passive:false});
+  </script>
 </body>
 </html>
