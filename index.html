@@ -92,10 +92,19 @@
       opacity: 0.55;
     }
 
+    .month-ring-base {
+      fill: none;
+      stroke: url(#monthRingBaseGrad);
+      stroke-width: 46;
+      filter: url(#rimShadow);
+      pointer-events: none;
+    }
+
     .month-arc {
-      stroke-width: 2.4;
-      stroke: rgba(255, 255, 255, 0.08);
-      fill-opacity: 0.95;
+      stroke-width: 1.4;
+      stroke: rgba(12, 9, 5, 0.18);
+      fill-opacity: 0.96;
+      shape-rendering: geometricPrecision;
     }
 
     .month-arc.season-winter {
@@ -140,6 +149,10 @@
       stroke: rgba(255, 245, 216, 0.65);
       stroke-width: 0.6;
       filter: url(#labelGlow);
+    }
+
+    .month-label.inverted {
+      stroke: rgba(255, 245, 216, 0.55);
     }
 
     #track {
@@ -202,6 +215,7 @@
 
     #rotor {
       transform-origin: center;
+      transform-box: fill-box;
     }
 
     #rotor.rotating {
@@ -360,6 +374,11 @@
                 <stop offset="0" stop-color="#1e2024" />
                 <stop offset="0.5" stop-color="#1b1d21" />
                 <stop offset="1" stop-color="#0d0e10" />
+              </linearGradient>
+              <linearGradient id="monthRingBaseGrad" x1="0" y1="-460" x2="0" y2="460" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="#fff1c6" />
+                <stop offset="0.4" stop-color="#d7b35f" />
+                <stop offset="1" stop-color="#6f521f" />
               </linearGradient>
               <linearGradient id="monthWinter" x1="0" y1="-460" x2="0" y2="460" gradientUnits="userSpaceOnUse">
                 <stop offset="0" stop-color="rgba(255, 255, 255, 0.2)" />
@@ -549,7 +568,12 @@
 
       const weeks = months.reduce((sum, month) => sum + month.weeks, 0);
       const stepDeg = 360 / weeks;
+      const monthOuter = 464;
+      const monthInner = 418;
+      const monthRadius = (monthOuter + monthInner) / 2;
+      const monthLabelRadius = 437;
       const toRad = (deg) => (deg * Math.PI) / 180;
+      const normalizeStep = (step) => ((step % weeks) + weeks) % weeks;
 
       const arc = (radius, fromDeg, toDeg) => {
         const polar = (angle) => [
@@ -586,15 +610,23 @@
       };
 
       const createLabel = (radius, angle, text) => {
+        const wrapper = document.createElementNS(svgNS, "g");
+        wrapper.setAttribute("transform", `rotate(${angle})`);
+
+        const holder = document.createElementNS(svgNS, "g");
+        holder.setAttribute("transform", `translate(0 ${-radius})`);
+
         const node = document.createElementNS(svgNS, "text");
-        const x = radius * Math.cos(toRad(angle - 90));
-        const y = radius * Math.sin(toRad(angle - 90));
-        node.setAttribute("x", x);
-        node.setAttribute("y", y);
         node.setAttribute("class", "month-label");
-        node.setAttribute("transform", `rotate(${angle - 90} ${x} ${y})`);
+        const inverted = angle > 90 && angle < 270;
+        if (inverted) {
+          node.classList.add("inverted");
+          node.setAttribute("transform", "rotate(180)");
+        }
         node.textContent = text.toUpperCase();
-        return node;
+        holder.appendChild(node);
+        wrapper.appendChild(holder);
+        return wrapper;
       };
 
       const weekToMonth = [];
@@ -604,8 +636,13 @@
         }
       });
 
+      const monthBase = document.createElementNS(svgNS, "circle");
+      monthBase.setAttribute("class", "month-ring-base");
+      monthBase.setAttribute("r", monthRadius);
+      monthRing.appendChild(monthBase);
+
       let cursor = 0;
-      months.forEach((month, index) => {
+      months.forEach((month) => {
         const startWeek = cursor;
         const endWeek = cursor + month.weeks;
         const startAngle = startWeek * stepDeg;
@@ -613,7 +650,7 @@
         cursor = endWeek;
 
         const segment = document.createElementNS(svgNS, "path");
-        segment.setAttribute("d", ringSegment(464, 418, startAngle + 0.2, endAngle - 0.2));
+        segment.setAttribute("d", ringSegment(monthOuter, monthInner, startAngle + 0.1, endAngle - 0.1));
         segment.setAttribute("class", `month-arc season-${month.season}`);
         monthRing.appendChild(segment);
 
@@ -621,7 +658,7 @@
         dial.appendChild(boundary);
 
         const midAngle = startAngle + (month.weeks * stepDeg) / 2;
-        labels.appendChild(createLabel(437, midAngle, month.label));
+        labels.appendChild(createLabel(monthLabelRadius, midAngle, month.label));
       });
 
       dial.appendChild(createLine(416, 468, 360, "month-tick"));
@@ -692,6 +729,10 @@
       snakesGroup.appendChild(snakeFragment);
 
       let rot = 0;
+      const applyRotation = (value) => {
+        rotor.style.transform = `rotate(${value}deg)`;
+      };
+      applyRotation(rot);
       let dragging = false;
       let startAngle = 0;
       let baseRot = 0;
@@ -715,11 +756,11 @@
           const osc = audioCtx.createOscillator();
           const gain = audioCtx.createGain();
           osc.type = "square";
-          osc.frequency.value = 950;
-          gain.gain.value = 0.015;
+          osc.frequency.value = 720;
+          gain.gain.value = 0.02;
           osc.connect(gain).connect(audioCtx.destination);
           osc.start();
-          setTimeout(() => osc.stop(), 24);
+          setTimeout(() => osc.stop(), 32);
         } catch (error) {
           // Audio context may be unavailable or blocked; ignore errors silently.
         }
@@ -730,7 +771,7 @@
         rotor.classList.remove("rotating");
         startAngle = toAngle(evt);
         baseRot = rot;
-        lastSnapIndex = Math.round(rot / stepDeg);
+        lastSnapIndex = normalizeStep(Math.round(rot / stepDeg));
         evt.preventDefault();
       };
 
@@ -738,8 +779,8 @@
         if (!dragging) return;
         const delta = toAngle(evt) - startAngle;
         rot = baseRot + delta;
-        rotor.setAttribute("transform", `rotate(${rot})`);
-        const snapIndex = Math.round(rot / stepDeg);
+        applyRotation(rot);
+        const snapIndex = normalizeStep(Math.round(rot / stepDeg));
         if (snapIndex !== lastSnapIndex) {
           lastSnapIndex = snapIndex;
           tick();
@@ -750,9 +791,12 @@
       const end = () => {
         if (!dragging) return;
         dragging = false;
-        rot = Math.round(rot / stepDeg) * stepDeg;
+        const snappedSteps = Math.round(rot / stepDeg);
+        const normalizedSteps = normalizeStep(snappedSteps);
+        rot = normalizedSteps * stepDeg;
         rotor.classList.add("rotating");
-        rotor.setAttribute("transform", `rotate(${rot})`);
+        applyRotation(rot);
+        lastSnapIndex = normalizedSteps;
         tick();
       };
 
