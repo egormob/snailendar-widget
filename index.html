@@ -4,33 +4,44 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Snailendar — Safe Dial</title>
-  <meta name="description" content="Золотой циферблат-сейф с сезонными секторами и проектами-змейками." />
+  <meta
+    name="description"
+    content="Премиальный циферблат-сейф с месяцами, сезонами и проектами-змейками, шагающими по неделям."
+  />
   <style>
     :root {
-      --gold: #caa243;
-      --gold-deep: #9b7a2b;
-      --metal: #202224;
-      --metal-mid: #2a2c2f;
-      --metal-lite: #3a3d42;
-      --safe-center: #8d8f92;
-      --winter: #103e8a;
-      --spring: #137a40;
-      --summer: #d4af37;
-      --autumn: #8a4f1a;
-      --ruby: #b1202b;
-      --silver: #cfd3d7;
-      --gold-bright: #f1cc52;
-      --tick: #000;
+      --gold: #d4b15a;
+      --gold-deep: #8b6a26;
+      --gold-soft: #f7dba2;
+      --metal: #151619;
+      --metal-mid: #1d1f22;
+      --metal-lite: #2b2d32;
+      --metal-sheen: #454750;
+      --safe-center: #90949b;
+      --winter-soft: #253c64;
+      --spring-soft: #1f5a3b;
+      --summer-soft: #846319;
+      --autumn-soft: #60361b;
+      --winter-glow: #2e558c;
+      --spring-glow: #3b9d6a;
+      --summer-glow: #d2ad4a;
+      --autumn-glow: #b96a26;
+      --ruby-dark: #5a0b15;
+      --ruby-light: #f29aa9;
+      --silver-dark: #72777d;
+      --silver-light: #f6f8fa;
+      --gold-bright: #ffdf85;
+      --tick: rgba(12, 9, 5, 0.65);
+      color-scheme: dark;
     }
 
     html,
     body {
       height: 100%;
       margin: 0;
-      background: radial-gradient(circle at top, #161719, #0b0c0e 70%, #050506 100%);
-      color: #111;
-      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
-        "Helvetica Neue", Arial;
+      background: radial-gradient(circle at 50% 15%, #2a2c30 0%, #0f1013 65%, #040405 100%);
+      color: #e6e3dc;
+      font-family: "Cinzel", "EB Garamond", "Times New Roman", serif;
       -webkit-font-smoothing: antialiased;
     }
 
@@ -49,7 +60,7 @@
     }
 
     .wrap {
-      height: 85vh;
+      height: 88vh;
       max-height: 100svh;
       display: grid;
       place-items: center;
@@ -57,94 +68,228 @@
     }
 
     svg {
-      width: min(95vw, 95vh);
+      width: min(96vw, 96vh);
       height: auto;
       display: block;
     }
 
     .bg-plate {
       fill: url(#plateGrad);
+      filter: url(#plateShadow);
     }
 
-    .ring-gold {
-      fill: url(#goldRingGrad);
-      stroke: var(--gold-deep);
-      stroke-width: 2;
+    .plate-rim {
+      fill: none;
+      stroke: url(#outerRimGrad);
+      stroke-width: 36;
+      filter: url(#rimShadow);
+    }
+
+    .plate-glow {
+      fill: none;
+      stroke: url(#rimGlowGrad);
+      stroke-width: 24;
+      opacity: 0.55;
+    }
+
+    .month-arc {
+      stroke-width: 2.4;
+      stroke: rgba(255, 255, 255, 0.08);
+      fill-opacity: 0.95;
+    }
+
+    .month-arc.season-winter {
+      fill: url(#monthWinter);
+    }
+
+    .month-arc.season-spring {
+      fill: url(#monthSpring);
+    }
+
+    .month-arc.season-summer {
+      fill: url(#monthSummer);
+    }
+
+    .month-arc.season-autumn {
+      fill: url(#monthAutumn);
     }
 
     .month-tick {
-      stroke: var(--tick);
-      stroke-width: 3;
+      stroke: rgba(12, 9, 5, 0.78);
+      stroke-width: 4;
       stroke-linecap: round;
+      filter: url(#tickGlow);
     }
 
     .week-tick {
-      stroke: var(--tick);
+      stroke: rgba(20, 14, 6, 0.45);
       stroke-width: 1.5;
       opacity: 0.9;
       stroke-linecap: round;
     }
 
     .month-label {
-      fill: #111;
-      font-weight: 700;
+      fill: #1f1507;
+      font-weight: 600;
       font-size: 20px;
-      letter-spacing: 0.5px;
+      letter-spacing: 1px;
       text-anchor: middle;
       dominant-baseline: middle;
+      text-transform: uppercase;
+      paint-order: stroke;
+      stroke: rgba(255, 245, 216, 0.65);
+      stroke-width: 0.6;
+      filter: url(#labelGlow);
     }
 
-    .season-band {
-      fill-opacity: 0.9;
-      stroke: var(--gold);
-      stroke-width: 2;
+    #track {
+      filter: url(#trackShadow);
     }
 
-    .track {
+    .track-base {
       fill: none;
-      stroke: #444;
-      stroke-width: 18;
-      opacity: 0.6;
+      stroke: url(#trackBaseGrad);
+      stroke-width: 54;
+      pointer-events: none;
+    }
+
+    .track-cell {
+      stroke: rgba(255, 255, 255, 0.05);
+      stroke-width: 1.1;
+      fill-opacity: 0.9;
+      filter: url(#cellBevel);
+      pointer-events: none;
+    }
+
+    .track-cell.season-winter {
+      fill: rgba(46, 85, 140, 0.55);
+    }
+
+    .track-cell.season-spring {
+      fill: rgba(59, 157, 106, 0.52);
+    }
+
+    .track-cell.season-summer {
+      fill: rgba(210, 173, 74, 0.46);
+    }
+
+    .track-cell.season-autumn {
+      fill: rgba(185, 106, 38, 0.5);
+    }
+
+    .track-outline {
+      fill: none;
+      stroke: rgba(255, 244, 208, 0.18);
+      stroke-width: 4;
+      pointer-events: none;
+    }
+
+    .track-outline.inner {
+      stroke: rgba(10, 8, 4, 0.55);
+    }
+
+    .inner-lip {
+      fill: none;
+      stroke: url(#innerLipGrad);
+      stroke-width: 22;
+    }
+
+    .inner-core {
+      fill: url(#innerCoreGrad);
+      stroke: rgba(0, 0, 0, 0.45);
+      stroke-width: 4;
+    }
+
+    #rotor {
+      transform-origin: center;
+    }
+
+    #rotor.rotating {
+      transition: transform 220ms cubic-bezier(0.25, 1, 0.45, 1);
     }
 
     .snake {
       fill: none;
-      stroke-linecap: round;
-      stroke-width: 18;
-      filter: url(#bevel);
+      stroke-linecap: butt;
+      stroke-linejoin: round;
+      stroke-width: 38;
+      filter: url(#snakeBevel);
+      pointer-events: stroke;
+      touch-action: none;
     }
 
     .snake.ruby {
-      stroke: var(--ruby);
+      stroke: url(#snake-ruby);
     }
 
     .snake.silver {
-      stroke: var(--silver);
+      stroke: url(#snake-silver);
     }
 
     .snake.gold {
-      stroke: var(--gold-bright);
+      stroke: url(#snake-gold);
     }
 
-    .knob {
-      fill: url(#knobGrad);
-      stroke: var(--gold);
-      stroke-width: 4;
+    .snake-glow {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.1);
+      stroke-width: 6;
+    }
+
+    #knob-group {
       cursor: grab;
+      filter: url(#knobShadow);
+      touch-action: none;
     }
 
-    .knob:active {
+    #knob-group:active {
       cursor: grabbing;
+    }
+
+    .knob-face {
+      fill: url(#knobFaceGrad);
+      stroke: rgba(0, 0, 0, 0.45);
+      stroke-width: 3;
+    }
+
+    .knob-ring {
+      fill: none;
+      stroke: url(#knobRingGrad);
+      stroke-width: 14;
+    }
+
+    .knob-core {
+      fill: url(#knobCoreGrad);
+      stroke: rgba(255, 255, 255, 0.2);
+      stroke-width: 4;
+    }
+
+    .knob-center {
+      fill: url(#knobCenterGrad);
+      stroke: rgba(255, 255, 255, 0.3);
+      stroke-width: 2;
+    }
+
+    .knob-spark {
+      fill: rgba(255, 255, 255, 0.85);
+      filter: url(#sparkGlow);
+    }
+
+    .knob-indicator {
+      stroke: rgba(255, 243, 214, 0.4);
+      stroke-width: 5;
+      stroke-linecap: round;
     }
 
     .hint {
       position: absolute;
-      inset: auto 0 1rem 0;
+      inset: auto 0 1.75rem 0;
       text-align: center;
       font-size: 14px;
-      opacity: 0.8;
-      color: #ddd;
+      opacity: 0.82;
+      color: rgba(233, 229, 214, 0.8);
       user-select: none;
+      letter-spacing: 0.08em;
     }
 
     noscript {
@@ -154,14 +299,15 @@
       padding: 2rem 1.5rem;
     }
 
-    @media (max-width: 600px) {
+    @media (max-width: 780px) {
       .month-label {
         font-size: 16px;
+        letter-spacing: 0.6px;
       }
 
       .hint {
         font-size: 12px;
-        padding: 0 1.5rem;
+        padding: 0 1.4rem;
       }
     }
   </style>
@@ -179,34 +325,117 @@
 
       root.innerHTML = `
         <div class="wrap">
-          <svg viewBox="-500 -500 1000 1000" role="img" aria-label="Календарь-сейф">
+          <svg viewBox="-500 -500 1000 1000" role="img" aria-label="Календарь-сейф премиум-класса">
             <defs>
               <radialGradient id="plateGrad" cx="0" cy="0" r="1">
-                <stop offset="0" stop-color="var(--metal-mid)" />
-                <stop offset=".6" stop-color="var(--metal)" />
-                <stop offset="1" stop-color="#111" />
+                <stop offset="0" stop-color="#35383f" />
+                <stop offset="0.45" stop-color="var(--metal-mid)" />
+                <stop offset="1" stop-color="#090a0c" />
               </radialGradient>
-              <radialGradient id="goldRingGrad" cx="0" cy="0" r="1">
-                <stop offset="0" stop-color="#f6d47a" />
-                <stop offset=".5" stop-color="var(--gold)" />
-                <stop offset="1" stop-color="#7e611f" />
+              <radialGradient id="plateGlowGrad" cx="0" cy="0" r="1">
+                <stop offset="0" stop-color="rgba(255, 255, 255, 0.12)" />
+                <stop offset="1" stop-color="rgba(255, 255, 255, 0)" />
               </radialGradient>
-              <radialGradient id="knobGrad" cx="-0.1" cy="-0.1" r="1">
-                <stop offset="0" stop-color="#bdbfc2" />
-                <stop offset=".6" stop-color="var(--safe-center)" />
-                <stop offset="1" stop-color="#6e7074" />
+              <linearGradient id="outerRimGrad" x1="-480" y1="-480" x2="480" y2="480" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="#f8e7bb" />
+                <stop offset="0.45" stop-color="var(--gold)" />
+                <stop offset="1" stop-color="#7f6121" />
+              </linearGradient>
+              <linearGradient id="rimGlowGrad" x1="0" y1="-460" x2="0" y2="460" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="rgba(255, 255, 255, 0.38)" />
+                <stop offset="0.45" stop-color="rgba(255, 255, 255, 0.05)" />
+                <stop offset="1" stop-color="rgba(255, 255, 255, 0.3)" />
+              </linearGradient>
+              <linearGradient id="innerLipGrad" x1="0" y1="-240" x2="0" y2="240" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="#2f3035" />
+                <stop offset="0.5" stop-color="#1a1b1f" />
+                <stop offset="1" stop-color="#2c2d31" />
+              </linearGradient>
+              <radialGradient id="innerCoreGrad" cx="0" cy="0" r="1">
+                <stop offset="0" stop-color="#777b81" />
+                <stop offset="0.6" stop-color="var(--safe-center)" />
+                <stop offset="1" stop-color="#5a5d63" />
               </radialGradient>
-              <filter id="bevel" x="-50%" y="-50%" width="200%" height="200%">
-                <feGaussianBlur in="SourceAlpha" stdDeviation="2" result="shadow" />
+              <linearGradient id="trackBaseGrad" x1="-320" y1="-320" x2="320" y2="320" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="#1e2024" />
+                <stop offset="0.5" stop-color="#1b1d21" />
+                <stop offset="1" stop-color="#0d0e10" />
+              </linearGradient>
+              <linearGradient id="monthWinter" x1="0" y1="-460" x2="0" y2="460" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="rgba(255, 255, 255, 0.2)" />
+                <stop offset="0.45" stop-color="#d3bd7c" />
+                <stop offset="1" stop-color="rgba(30, 48, 78, 0.9)" />
+              </linearGradient>
+              <linearGradient id="monthSpring" x1="0" y1="-460" x2="0" y2="460" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="rgba(255, 255, 255, 0.2)" />
+                <stop offset="0.45" stop-color="#d8c585" />
+                <stop offset="1" stop-color="rgba(41, 93, 60, 0.88)" />
+              </linearGradient>
+              <linearGradient id="monthSummer" x1="0" y1="-460" x2="0" y2="460" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="rgba(255, 255, 255, 0.2)" />
+                <stop offset="0.45" stop-color="#d9c989" />
+                <stop offset="1" stop-color="rgba(152, 111, 29, 0.92)" />
+              </linearGradient>
+              <linearGradient id="monthAutumn" x1="0" y1="-460" x2="0" y2="460" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="rgba(255, 255, 255, 0.2)" />
+                <stop offset="0.45" stop-color="#d2b67d" />
+                <stop offset="1" stop-color="rgba(130, 70, 24, 0.92)" />
+              </linearGradient>
+              <linearGradient id="snake-ruby" x1="0" y1="-300" x2="0" y2="300" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="#fbd0d5" />
+                <stop offset="0.35" stop-color="#d43d4d" />
+                <stop offset="1" stop-color="#520611" />
+              </linearGradient>
+              <linearGradient id="snake-silver" x1="0" y1="-300" x2="0" y2="300" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="#f8f9fb" />
+                <stop offset="0.4" stop-color="#c7ccd2" />
+                <stop offset="1" stop-color="#5a5d63" />
+              </linearGradient>
+              <linearGradient id="snake-gold" x1="0" y1="-300" x2="0" y2="300" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="#fff0c9" />
+                <stop offset="0.4" stop-color="#f2c14c" />
+                <stop offset="1" stop-color="#7e571b" />
+              </linearGradient>
+              <radialGradient id="knobFaceGrad" cx="-0.15" cy="-0.2" r="1">
+                <stop offset="0" stop-color="#ece8dd" />
+                <stop offset="0.4" stop-color="#b5b7bb" />
+                <stop offset="1" stop-color="#4a4d55" />
+              </radialGradient>
+              <linearGradient id="knobRingGrad" x1="-110" y1="-110" x2="110" y2="110" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="#f8e6ba" />
+                <stop offset="0.45" stop-color="#d4b15a" />
+                <stop offset="1" stop-color="#6d5220" />
+              </linearGradient>
+              <radialGradient id="knobCoreGrad" cx="0" cy="0" r="1">
+                <stop offset="0" stop-color="#f1f2f4" />
+                <stop offset="0.5" stop-color="#9da0a6" />
+                <stop offset="1" stop-color="#4f5258" />
+              </radialGradient>
+              <radialGradient id="knobCenterGrad" cx="-0.2" cy="-0.3" r="1">
+                <stop offset="0" stop-color="#fff4d4" />
+                <stop offset="0.7" stop-color="#d0a74b" />
+                <stop offset="1" stop-color="#684d1f" />
+              </radialGradient>
+              <filter id="plateShadow" x="-30%" y="-30%" width="160%" height="160%">
+                <feDropShadow dx="0" dy="16" stdDeviation="25" flood-color="#000000" flood-opacity="0.55" />
+              </filter>
+              <filter id="rimShadow" x="-30%" y="-30%" width="160%" height="160%">
+                <feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#000000" flood-opacity="0.5" />
+              </filter>
+              <filter id="trackShadow" x="-30%" y="-30%" width="160%" height="160%">
+                <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#000000" flood-opacity="0.55" />
+              </filter>
+              <filter id="cellBevel" x="-40%" y="-40%" width="180%" height="180%">
+                <feGaussianBlur in="SourceAlpha" stdDeviation="1.2" result="shadow" />
                 <feSpecularLighting
                   in="shadow"
                   surfaceScale="4"
-                  specularConstant=".6"
-                  specularExponent="20"
+                  specularConstant="0.6"
+                  specularExponent="22"
                   lighting-color="#ffffff"
                   result="spec"
                 >
-                  <fePointLight x="-200" y="-200" z="200"></fePointLight>
+                  <fePointLight x="-180" y="-260" z="240"></fePointLight>
                 </feSpecularLighting>
                 <feComposite in="spec" in2="SourceAlpha" operator="in" result="highlight"></feComposite>
                 <feMerge>
@@ -214,45 +443,113 @@
                   <feMergeNode in="highlight"></feMergeNode>
                 </feMerge>
               </filter>
+              <filter id="snakeBevel" x="-60%" y="-60%" width="220%" height="220%">
+                <feGaussianBlur in="SourceAlpha" stdDeviation="2" result="shadow" />
+                <feSpecularLighting
+                  in="shadow"
+                  surfaceScale="6"
+                  specularConstant="0.75"
+                  specularExponent="28"
+                  lighting-color="#ffffff"
+                  result="spec"
+                >
+                  <fePointLight x="-200" y="-200" z="260"></fePointLight>
+                </feSpecularLighting>
+                <feComposite in="spec" in2="SourceAlpha" operator="in" result="highlight"></feComposite>
+                <feMerge>
+                  <feMergeNode in="SourceGraphic"></feMergeNode>
+                  <feMergeNode in="highlight"></feMergeNode>
+                </feMerge>
+              </filter>
+              <filter id="tickGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="0.6" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+              <filter id="labelGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur in="SourceAlpha" stdDeviation="1.5" result="shadow" />
+                <feOffset dx="0" dy="2" result="offset" />
+                <feMerge>
+                  <feMergeNode in="offset" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+              <filter id="knobShadow" x="-40%" y="-40%" width="180%" height="180%">
+                <feDropShadow dx="0" dy="12" stdDeviation="18" flood-color="#000000" flood-opacity="0.55" />
+              </filter>
+              <filter id="sparkGlow" x="-200%" y="-200%" width="400%" height="400%">
+                <feGaussianBlur stdDeviation="4" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
             </defs>
 
             <circle class="bg-plate" r="480"></circle>
-            <circle class="ring-gold" r="460"></circle>
+            <circle class="plate-rim" r="458"></circle>
+            <circle class="plate-glow" r="430"></circle>
 
-            <g id="seasons">
-              <path class="season-band" fill="var(--winter)" d="" id="season-w"></path>
-              <path class="season-band" fill="var(--spring)" d="" id="season-sp"></path>
-              <path class="season-band" fill="var(--summer)" d="" id="season-su"></path>
-              <path class="season-band" fill="var(--autumn)" d="" id="season-au"></path>
-            </g>
-
+            <g id="month-ring"></g>
             <g id="dial"></g>
+            <g id="labels"></g>
 
-            <circle class="track" r="250"></circle>
+            <g id="track"></g>
+
+            <circle class="inner-lip" r="240"></circle>
+            <circle class="inner-core" r="208"></circle>
 
             <g id="rotor">
               <g id="snakes"></g>
-              <circle class="knob" r="110"></circle>
-              <circle class="knob" r="60" fill="none" stroke="var(--gold-deep)" stroke-width="5"></circle>
+              <g id="knob-group">
+                <circle class="knob-face" r="132"></circle>
+                <circle class="knob-ring" r="102"></circle>
+                <circle class="knob-core" r="74"></circle>
+                <path class="knob-indicator" d="M 0 -100 L 0 -66"></path>
+                <circle class="knob-center" r="36"></circle>
+                <circle class="knob-spark" r="8" cx="-14" cy="-18"></circle>
+              </g>
             </g>
           </svg>
-          <div class="hint">Потяни за ручку или змейку — поворот по неделям с тихим «щелчком»</div>
+          <div class="hint">Потяни за ручку или за проект — колесо шагает по неделям с тонким «щелчком»</div>
         </div>
       `;
 
       const svg = root.querySelector("svg");
       const dial = root.querySelector("#dial");
+      const labels = root.querySelector("#labels");
+      const monthRing = root.querySelector("#month-ring");
+      const trackGroup = root.querySelector("#track");
       const snakesGroup = root.querySelector("#snakes");
       const rotor = root.querySelector("#rotor");
+      const knob = root.querySelector("#knob-group");
 
-      if (!svg || !dial || !snakesGroup || !rotor) {
+      if (!svg || !dial || !labels || !monthRing || !trackGroup || !snakesGroup || !rotor || !knob) {
         throw new Error("Snailendar markup failed to initialise");
       }
 
-      const weeks = 52;
+      const svgNS = "http://www.w3.org/2000/svg";
+
+      const months = [
+        { label: "Январь", weeks: 4, season: "winter" },
+        { label: "Февраль", weeks: 4, season: "winter" },
+        { label: "Март", weeks: 5, season: "spring" },
+        { label: "Апрель", weeks: 4, season: "spring" },
+        { label: "Май", weeks: 5, season: "spring" },
+        { label: "Июнь", weeks: 4, season: "summer" },
+        { label: "Июль", weeks: 5, season: "summer" },
+        { label: "Август", weeks: 4, season: "summer" },
+        { label: "Сентябрь", weeks: 4, season: "autumn" },
+        { label: "Октябрь", weeks: 5, season: "autumn" },
+        { label: "Ноябрь", weeks: 4, season: "autumn" },
+        { label: "Декабрь", weeks: 4, season: "winter" },
+      ];
+
+      const weeks = months.reduce((sum, month) => sum + month.weeks, 0);
       const stepDeg = 360 / weeks;
       const toRad = (deg) => (deg * Math.PI) / 180;
-      const svgNS = "http://www.w3.org/2000/svg";
 
       const arc = (radius, fromDeg, toDeg) => {
         const polar = (angle) => [
@@ -266,6 +563,12 @@
         const delta = Math.abs(diff) % 360;
         const large = delta > 180 ? 1 : 0;
         return `M ${x0} ${y0} A ${radius} ${radius} 0 ${large} ${sweep} ${x1} ${y1}`;
+      };
+
+      const ringSegment = (outerR, innerR, startDeg, endDeg) => {
+        const outer = arc(outerR, startDeg, endDeg);
+        const inner = arc(innerR, endDeg, startDeg).replace("M", "L");
+        return `${outer} ${inner} Z`;
       };
 
       const createLine = (innerR, outerR, angle, className) => {
@@ -290,82 +593,103 @@
         node.setAttribute("y", y);
         node.setAttribute("class", "month-label");
         node.setAttribute("transform", `rotate(${angle - 90} ${x} ${y})`);
-        node.textContent = text;
+        node.textContent = text.toUpperCase();
         return node;
       };
 
-      const months = [
-        "ЯНВАРЬ",
-        "ФЕВРАЛЬ",
-        "МАРТ",
-        "АПРЕЛЬ",
-        "МАЙ",
-        "ИЮНЬ",
-        "ИЮЛЬ",
-        "АВГУСТ",
-        "СЕНТЯБРЬ",
-        "ОКТЯБРЬ",
-        "НОЯБРЬ",
-        "ДЕКАБРЬ",
-      ];
-      const monthAngle = 360 / months.length;
+      const weekToMonth = [];
+      months.forEach((month, monthIndex) => {
+        for (let w = 0; w < month.weeks; w += 1) {
+          weekToMonth.push({ monthIndex, season: month.season });
+        }
+      });
 
-      for (let i = 0; i < months.length; i += 1) {
-        const angle = i * monthAngle;
-        dial.appendChild(createLine(430, 460, angle, "month-tick"));
-      }
+      let cursor = 0;
+      months.forEach((month, index) => {
+        const startWeek = cursor;
+        const endWeek = cursor + month.weeks;
+        const startAngle = startWeek * stepDeg;
+        const endAngle = endWeek * stepDeg;
+        cursor = endWeek;
+
+        const segment = document.createElementNS(svgNS, "path");
+        segment.setAttribute("d", ringSegment(464, 418, startAngle + 0.2, endAngle - 0.2));
+        segment.setAttribute("class", `month-arc season-${month.season}`);
+        monthRing.appendChild(segment);
+
+        const boundary = createLine(416, 468, startAngle, "month-tick");
+        dial.appendChild(boundary);
+
+        const midAngle = startAngle + (month.weeks * stepDeg) / 2;
+        labels.appendChild(createLabel(437, midAngle, month.label));
+      });
+
+      dial.appendChild(createLine(416, 468, 360, "month-tick"));
 
       for (let i = 0; i < weeks; i += 1) {
         const angle = i * stepDeg;
-        dial.appendChild(createLine(446, 458, angle, "week-tick"));
+        dial.appendChild(createLine(432, 446, angle, "week-tick"));
       }
 
-      for (let i = 0; i < months.length; i += 1) {
-        const angle = i * monthAngle + monthAngle / 2;
-        dial.appendChild(createLabel(410, angle, months[i]));
+      const trackOuter = 322;
+      const trackInner = 268;
+      const trackWidth = trackOuter - trackInner;
+      const trackRadius = trackInner + trackWidth / 2;
+
+      const trackBase = document.createElementNS(svgNS, "circle");
+      trackBase.setAttribute("class", "track-base");
+      trackBase.setAttribute("r", trackRadius);
+      trackBase.setAttribute("fill", "none");
+      trackBase.setAttribute("stroke-width", trackWidth);
+      trackBase.setAttribute("stroke", "url(#trackBaseGrad)");
+      trackGroup.appendChild(trackBase);
+
+      const cellMargin = 0.8;
+      const cellsFragment = document.createDocumentFragment();
+      for (let i = 0; i < weeks; i += 1) {
+        const startAngle = i * stepDeg + cellMargin;
+        const endAngle = (i + 1) * stepDeg - cellMargin;
+        const cell = document.createElementNS(svgNS, "path");
+        cell.setAttribute("d", ringSegment(trackOuter, trackInner, startAngle, endAngle));
+        const info = weekToMonth[i];
+        cell.setAttribute("class", `track-cell season-${info.season}`);
+        cellsFragment.appendChild(cell);
       }
+      trackGroup.appendChild(cellsFragment);
 
-      const seasons = [
-        { id: "season-w", startDeg: 300, spanDeg: 90 },
-        { id: "season-sp", startDeg: 30, spanDeg: 90 },
-        { id: "season-su", startDeg: 120, spanDeg: 90 },
-        { id: "season-au", startDeg: 210, spanDeg: 90 },
-      ];
+      const outlineOuter = document.createElementNS(svgNS, "circle");
+      outlineOuter.setAttribute("class", "track-outline outer");
+      outlineOuter.setAttribute("r", trackOuter + 2);
+      trackGroup.appendChild(outlineOuter);
 
-      seasons.forEach((season) => {
-        const segment = root.querySelector(`#${season.id}`);
-        if (!segment) {
-          return;
-        }
-        const outerRadius = 310;
-        const innerRadius = 280;
-        const start = season.startDeg;
-        const end = season.startDeg + season.spanDeg;
-        const outer = arc(outerRadius, start, end);
-        const inner = arc(innerRadius, end, start).replace("M", "L");
-        segment.setAttribute("d", `${outer} ${inner} Z`);
-      });
+      const outlineInner = document.createElementNS(svgNS, "circle");
+      outlineInner.setAttribute("class", "track-outline inner");
+      outlineInner.setAttribute("r", trackInner - 2);
+      trackGroup.appendChild(outlineInner);
 
       const snakes = [
-        { cls: "ruby", start: 49, len: 2 },
-        { cls: "ruby", start: 25, len: 2 },
-        { cls: "silver", start: 3, len: 6 },
-        { cls: "silver", start: 16, len: 6 },
-        { cls: "silver", start: 29, len: 6 },
-        { cls: "silver", start: 42, len: 6 },
-        { cls: "gold", start: 30, len: 4 },
-        { cls: "gold", start: 0, len: 3 },
+        { cls: "gold", start: 1, len: 4 },
+        { cls: "silver", start: 7, len: 6 },
+        { cls: "gold", start: 15, len: 4 },
+        { cls: "silver", start: 22, len: 7 },
+        { cls: "ruby", start: 33, len: 3 },
+        { cls: "silver", start: 40, len: 7 },
       ];
-      const snakeRadius = 250;
 
+      const snakeRadius = trackInner + trackWidth / 2;
+      const cubeArc = (2 * Math.PI * snakeRadius) / weeks;
+      const snakeFragment = document.createDocumentFragment();
       snakes.forEach((snake) => {
-        const start = snake.start * stepDeg;
-        const end = (snake.start + snake.len) * stepDeg;
+        const start = snake.start * stepDeg + 0.9;
+        const end = (snake.start + snake.len) * stepDeg - 0.9;
         const path = document.createElementNS(svgNS, "path");
         path.setAttribute("d", arc(snakeRadius, start, end));
         path.setAttribute("class", `snake ${snake.cls}`);
-        snakesGroup.appendChild(path);
+        path.setAttribute("stroke-dasharray", `${(cubeArc * 0.72).toFixed(3)} ${(cubeArc * 0.28).toFixed(3)}`);
+        path.setAttribute("stroke-dashoffset", (cubeArc * 0.1).toFixed(3));
+        snakeFragment.appendChild(path);
       });
+      snakesGroup.appendChild(snakeFragment);
 
       let rot = 0;
       let dragging = false;
@@ -391,11 +715,11 @@
           const osc = audioCtx.createOscillator();
           const gain = audioCtx.createGain();
           osc.type = "square";
-          osc.frequency.value = 1000;
-          gain.gain.value = 0.01;
+          osc.frequency.value = 950;
+          gain.gain.value = 0.015;
           osc.connect(gain).connect(audioCtx.destination);
           osc.start();
-          setTimeout(() => osc.stop(), 22);
+          setTimeout(() => osc.stop(), 24);
         } catch (error) {
           // Audio context may be unavailable or blocked; ignore errors silently.
         }
@@ -403,6 +727,7 @@
 
       const begin = (evt) => {
         dragging = true;
+        rotor.classList.remove("rotating");
         startAngle = toAngle(evt);
         baseRot = rot;
         lastSnapIndex = Math.round(rot / stepDeg);
@@ -426,11 +751,12 @@
         if (!dragging) return;
         dragging = false;
         rot = Math.round(rot / stepDeg) * stepDeg;
+        rotor.classList.add("rotating");
         rotor.setAttribute("transform", `rotate(${rot})`);
         tick();
       };
 
-      const interactiveNodes = root.querySelectorAll(".knob, .snake");
+      const interactiveNodes = [...snakesGroup.querySelectorAll(".snake"), knob];
       interactiveNodes.forEach((node) => {
         node.addEventListener("pointerdown", begin, { passive: false });
         node.addEventListener("touchstart", begin, { passive: false });
